@@ -9,10 +9,7 @@ from emergentintegrations.llm.chat import LlmChat, UserMessage
 
 logger = logging.getLogger(__name__)
 
-# GPT-4o has 128k token context (~500k chars).
-# Pass up to 45k chars per doc so full content is available.
 MAX_CHARS_PER_DOC = 45_000
-# Smaller batch keeps the per-request payload manageable
 BATCH_SIZE = 10
 
 
@@ -21,7 +18,7 @@ async def answer_questions_with_docs(questions: List[str], documents: List[dict]
     if not documents:
         return [
             {"question": q, "answer": "No reference documents provided.", "found": False,
-             "source_document": None, "citation": None}
+             "source_document": None, "citation": None, "confidence": "LOW", "evidence_text": None}
             for q in questions
         ]
 
@@ -36,8 +33,6 @@ async def answer_questions_with_docs(questions: List[str], documents: List[dict]
 async def _process_batch(questions: List[str], documents: List[dict]) -> List[dict]:
     api_key = os.environ.get("EMERGENT_LLM_KEY")
 
-    # Pass the FULL content of every document (capped at MAX_CHARS_PER_DOC each).
-    # GPT-4o's 128k context handles this comfortably.
     doc_context = ""
     for doc in documents:
         content = doc["content"][:MAX_CHARS_PER_DOC]
@@ -46,34 +41,33 @@ async def _process_batch(questions: List[str], documents: List[dict]) -> List[di
     numbered_qs = "\n".join([f"{i + 1}. {q}" for i, q in enumerate(questions)])
 
     prompt = f"""You are a compliance expert answering a vendor security questionnaire.
-The reference documents below contain all the policies, procedures, and technical details needed to answer the questions.
+Search ALL provided documents thoroughly for each question.
 
 IMPORTANT INSTRUCTIONS:
-- Read ALL provided documents THOROUGHLY before answering each question.
 - Search for related terms, synonyms, and implied information — not just exact keyword matches.
-  Example: "Do you encrypt stored data?" can be answered by text saying "All data at rest is protected with AES-256".
-- If a document addresses the topic indirectly or partially, use that to form an answer.
-- Only set "found": false if NO relevant information exists across ALL documents after careful searching.
-- Cite the exact document name and a brief supporting quote for every found answer.
+- Only set "found": false if NO relevant information exists in ANY document after careful searching.
+- For confidence: HIGH = direct explicit statement found; MEDIUM = related info requiring inference; LOW = only tangential reference found.
+- evidence_text: copy the EXACT relevant passage from the document (up to 400 chars) that supports your answer.
 
 REFERENCE DOCUMENTS:
 {doc_context}
 
-QUESTIONS TO ANSWER:
+QUESTIONS:
 {numbered_qs}
 
-Respond with ONLY a valid JSON array (no markdown, no explanation):
+Respond with ONLY a valid JSON array (no markdown):
 [
   {{
     "question_index": 1,
-    "answer": "Detailed, specific answer drawn from the documents",
+    "answer": "Detailed answer drawn from documents",
     "found": true,
-    "source_document": "exact document filename",
-    "citation": "brief supporting quote or section reference (max 200 chars)"
+    "source_document": "exact filename",
+    "citation": "brief supporting quote (max 200 chars)",
+    "confidence": "HIGH",
+    "evidence_text": "exact passage from document that was used (max 400 chars)"
   }}
 ]
-
-Set "found": false and "answer": "Not found in references" ONLY when the topic is truly absent from every document."""
+For not-found: "found": false, "answer": "Not found in references", "source_document": null, "citation": null, "confidence": "LOW", "evidence_text": null"""
 
     try:
         chat = LlmChat(
@@ -81,8 +75,8 @@ Set "found": false and "answer": "Not found in references" ONLY when the topic i
             session_id=str(uuid.uuid4()),
             system_message=(
                 "You are a compliance expert answering vendor questionnaire questions. "
-                "Search the provided documents broadly and thoroughly — look for related terms and implied answers. "
-                "Be liberal in finding relevant content; only return 'Not found' when truly nothing relevant exists. "
+                "Search documents broadly using synonyms and related terms. "
+                "Only return 'Not found' when truly nothing relevant exists. "
                 "Always respond with a valid JSON array only — no markdown, no extra text."
             ),
         ).with_model("openai", "gpt-4o")
@@ -97,12 +91,18 @@ Set "found": false and "answer": "Not found in references" ONLY when the topic i
         results = []
         for idx, q in enumerate(questions):
             qa = answer_map.get(idx, {})
+            conf = (qa.get("confidence") or "LOW").upper()
+            if conf not in ("HIGH", "MEDIUM", "LOW"):
+                conf = "LOW"
             results.append({
                 "question": q,
                 "answer": qa.get("answer", "Not found in references"),
                 "found": bool(qa.get("found", False)),
                 "source_document": qa.get("source_document"),
                 "citation": qa.get("citation"),
+                "confidence": conf,
+                "evidence_text": qa.get("evidence_text"),
+                "is_edited": False,
             })
         return results
 
@@ -110,6 +110,7 @@ Set "found": false and "answer": "Not found in references" ONLY when the topic i
         logger.error(f"AI processing error: {e}")
         return [
             {"question": q, "answer": "Processing error — please try again.", "found": False,
-             "source_document": None, "citation": None}
+             "source_document": None, "citation": None, "confidence": "LOW",
+             "evidence_text": None, "is_edited": False}
             for q in questions
         ]

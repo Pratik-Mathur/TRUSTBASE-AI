@@ -84,12 +84,19 @@ GET  /api/questionnaires/{id}/download — Download answered CSV
 - [x] JWT auth (register, login, me endpoint, protected routes)
 - [x] Reference document upload (PDF/TXT extraction, stored in MongoDB)
 - [x] Document management (list, delete per user)
-- [x] Questionnaire file upload with question parsing (numbered + line-by-line)
-- [x] AI processing via GPT-4o with background tasks (async)
+- [x] Questionnaire file upload — smart parser (Q1/Q2 style, numbered+?, line "?" fallback, title skip)
+- [x] AI processing via GPT-4o with background tasks, full document context (45k chars/doc)
+- [x] Confidence scores: HIGH / MEDIUM / LOW (AI-assessed)
+- [x] Evidence snippets: exact passage per answer, collapsible "View Evidence"
 - [x] Answer citations: source document + supporting quote
 - [x] "Not found in references" fallback
-- [x] Results page with polling (3s interval) while processing
-- [x] CSV download of completed answers
+- [x] Editable answers: Edit/Save/Cancel per card, persisted via PATCH endpoint, "Edited" badge
+- [x] Per-question regenerate: re-run AI for a single question (synchronous)
+- [x] Full "Regenerate Answers": saves current answers as versioned snapshot first
+- [x] Version history: dropdown to view any previous run's full answers
+- [x] Coverage summary card: total, answered, not-found, confidence bars, progress bar
+- [x] DOCX export: professional report with cover, confidence colors, citations, evidence
+- [x] Results page polling (3s interval) while AI processes
 - [x] Dashboard with stats, tabs (Documents / Questionnaires)
 - [x] Design: Plus Jakarta Sans, dark navy (#020817), sky blue (#38BDF8)
 

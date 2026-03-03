@@ -32,6 +32,17 @@ class QuestionnaireAnswer(BaseModel):
     found: bool
     source_document: Optional[str] = None
     citation: Optional[str] = None
+    confidence: Optional[str] = None       # HIGH, MEDIUM, LOW
+    evidence_text: Optional[str] = None    # Exact passage from source doc
+    is_edited: bool = False                # True if manually edited by user
+
+
+class QuestionnaireVersion(BaseModel):
+    version_number: int
+    created_at: datetime
+    answers_found_count: int
+    confidence_counts: dict
+    answers: List[QuestionnaireAnswer] = []
 
 
 class QuestionnaireModel(BaseModel):
@@ -41,6 +52,7 @@ class QuestionnaireModel(BaseModel):
     status: str = "pending"
     questions: List[str] = []
     answers: List[QuestionnaireAnswer] = []
+    versions: List[QuestionnaireVersion] = []
     document_ids: List[str] = []
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     completed_at: Optional[datetime] = None
