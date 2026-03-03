@@ -1,0 +1,136 @@
+{
+  "identity": {
+    "name": "AnswerIQ",
+    "brand_name": "AnswerIQ",
+    "company_name": "TrustBase AI",
+    "mission": "Automate vendor questionnaires with AI precision.",
+    "archetype": "The Performance Pro",
+    "vibe": "Trustworthy, Efficient, Intelligent, Deep",
+    "emotional_tone": "Professional Confidence"
+  },
+  "typography": {
+    "primary_font": "Plus Jakarta Sans",
+    "secondary_font": "Inter",
+    "mono_font": "JetBrains Mono",
+    "weights": {
+      "light": 300,
+      "regular": 400,
+      "medium": 500,
+      "semibold": 600,
+      "bold": 700,
+      "black": 800
+    },
+    "scale": {
+      "h1": "text-5xl md:text-7xl font-bold tracking-tight leading-[1.1]",
+      "h2": "text-4xl md:text-5xl font-semibold tracking-tight",
+      "h3": "text-2xl md:text-3xl font-semibold tracking-tight",
+      "body_lg": "text-lg md:text-xl leading-relaxed text-slate-300",
+      "body": "text-base leading-relaxed text-slate-400",
+      "caption": "text-sm text-slate-500 uppercase tracking-widest font-semibold"
+    }
+  },
+  "colors": {
+    "palette": {
+      "background": "#020817",
+      "foreground": "#F8FAFC",
+      "card": "#0B1221",
+      "card_foreground": "#F8FAFC",
+      "popover": "#020817",
+      "popover_foreground": "#F8FAFC",
+      "primary": "#38BDF8",
+      "primary_foreground": "#0F172A",
+      "secondary": "#1E293B",
+      "secondary_foreground": "#F8FAFC",
+      "muted": "#0F172A",
+      "muted_foreground": "#94A3B8",
+      "accent": "#1E293B",
+      "accent_foreground": "#F8FAFC",
+      "destructive": "#EF4444",
+      "destructive_foreground": "#F8FAFC",
+      "border": "#1E293B",
+      "input": "#1E293B",
+      "ring": "#38BDF8"
+    },
+    "gradients": {
+      "hero_glow": "bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-sky-900/40 via-[#020817] to-[#020817]",
+      "subtle_mesh": "bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-900/20 via-[#020817] to-[#020817]",
+      "card_surface": "bg-gradient-to-b from-slate-800/40 to-slate-900/40"
+    }
+  },
+  "visual_enhancers": {
+    "glassmorphism": {
+      "header": "bg-[#020817]/80 backdrop-blur-xl border-b border-slate-800/60",
+      "card": "bg-slate-900/40 backdrop-blur-md border border-slate-800/60 shadow-xl"
+    },
+    "borders": {
+      "subtle": "border border-slate-800",
+      "active": "border border-sky-500/50",
+      "glow": "ring-1 ring-sky-500/50 shadow-[0_0_16px_-4px_rgba(56,189,248,0.3)]"
+    },
+    "shadows": {
+      "card": "shadow-[0_8px_30px_rgb(0,0,0,0.12)]",
+      "float": "shadow-[0_20px_50px_rgb(0,0,0,0.5)]"
+    },
+    "textures": {
+      "noise": "bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"
+    }
+  },
+  "component_strategies": {
+    "buttons": {
+      "primary": "bg-sky-500 hover:bg-sky-400 text-slate-950 font-semibold rounded-lg h-11 px-8 shadow-[0_0_20px_-5px_rgba(56,189,248,0.4)] transition-all hover:scale-[1.02]",
+      "secondary": "bg-slate-800/50 hover:bg-slate-800 text-white border border-slate-700 hover:border-slate-600 font-medium rounded-lg h-11 px-6 transition-all",
+      "ghost": "hover:bg-slate-800/50 text-slate-400 hover:text-white transition-colors"
+    },
+    "cards": {
+      "feature": "group relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/20 p-8 hover:border-slate-700 transition-colors",
+      "dashboard": "rounded-xl border border-slate-800 bg-[#0B1221] p-6 shadow-sm"
+    },
+    "inputs": {
+      "default": "bg-slate-950/50 border-slate-800 focus:border-sky-500/50 focus:ring-sky-500/20 rounded-lg h-11 transition-all"
+    }
+  },
+  "layout_strategies": {
+    "landing": {
+      "grid": "grid grid-cols-1 md:grid-cols-12 gap-8",
+      "container": "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8",
+      "section_spacing": "py-24 md:py-32"
+    },
+    "dashboard": {
+      "grid": "grid grid-cols-12 gap-6 p-6",
+      "sidebar_width": "w-64",
+      "main_content": "flex-1 bg-[#020817] min-h-screen"
+    }
+  },
+  "assets": {
+    "images": [
+      {
+        "url": "https://images.unsplash.com/photo-1762279388956-1c098163a2a8?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzR8MHwxfHNlYXJjaHwzfHxhYnN0cmFjdCUyMHRlY2hub2xvZ3klMjBuZXR3b3JrJTIwZGFyayUyMGJsdWUlMjBiYWNrZ3JvdW5kfGVufDB8fHx8MTc3MjU0MzEyM3ww&ixlib=rb-4.1.0&q=85",
+        "description": "Hero Background - Abstract Neon Network",
+        "category": "hero_bg"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1760611656007-f767a8082758?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2ODh8MHwxfHNlYXJjaHwxfHxidXNpbmVzcyUyMHRlYW0lMjBtZWV0aW5nJTIwbW9kZXJuJTIwb2ZmaWNlfGVufDB8fHx8MTc3MjU0MzEyNHww&ixlib=rb-4.1.0&q=85",
+        "description": "Team Collaboration - Two people working",
+        "category": "feature_image"
+      },
+      {
+         "url": "https://images.unsplash.com/photo-1758518726775-70e538b0d46e?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2ODh8MHwxfHNlYXJjaHw0fHxidXNpbmVzcyUyMHRlYW0lMjBtZWV0aW5nJTIwbW9kZXJuJTIwb2ZmaWNlfGVufDB8fHx8MTc3MjU0MzEyNHww&ixlib=rb-4.1.0&q=85",
+         "description": "Meeting - Three professionals discussion",
+         "category": "about_image"
+      }
+    ],
+    "icons": "lucide-react"
+  },
+  "universal_guidelines": [
+    "NEVER use gradients for text unless it's a very subtle shine effect.",
+    "Dark mode is the ONLY mode for this iteration. Force 'dark' class on HTML.",
+    "Use 'Plus Jakarta Sans' for all headings to establish the 'Fintech/Pro' look.",
+    "Borders should be extremely subtle (slate-800), use shadows and bg variance for hierarchy.",
+    "Interactive elements must have a 'data-testid'.",
+    "Use 'sonner' for all toast notifications.",
+    "Avoid 'Inter' for Headings. Use it only for body text.",
+    "No full-screen solid background colors other than #020817.",
+    "Use plenty of negative space (py-24+) between sections."
+  ],
+  "instructions_to_main_agent": "Implement the landing page first with the 'Bento' grid layout for features. Use the provided abstract neon image as a subtle background for the Hero section with a heavy gradient overlay to ensure text readability. For the dashboard, strictly adhere to the sidebar layout with the deep navy background. Ensure all forms and inputs use the 'slate-950' background style defined in component_strategies."
+}
