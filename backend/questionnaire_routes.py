@@ -300,6 +300,40 @@ async def _bg_process(q_id: str, doc_ids: List[str]):
         )
 
 
+@router.post("/{q_id}/regenerate")
+async def regenerate_questionnaire(
+    q_id: str,
+    background_tasks: BackgroundTasks,
+    user_id: str = Depends(get_current_user),
+):
+    """Re-run AI answering using ALL of the user's currently uploaded documents."""
+    try:
+        obj_id = ObjectId(q_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid ID")
+
+    q = await db.questionnaires.find_one({"_id": obj_id, "user_id": user_id})
+    if not q:
+        raise HTTPException(status_code=404, detail="Not found")
+    if q["status"] == "processing":
+        raise HTTPException(status_code=400, detail="Already processing")
+
+    # Always use ALL documents currently uploaded by the user
+    all_docs = await db.documents.find({"user_id": user_id}, {"_id": 1}).to_list(200)
+    doc_ids = [str(d["_id"]) for d in all_docs]
+
+    if not doc_ids:
+        raise HTTPException(status_code=400, detail="No reference documents available. Please upload documents first.")
+
+    await db.questionnaires.update_one(
+        {"_id": obj_id},
+        {"$set": {"status": "processing", "document_ids": doc_ids, "answers": [], "error_message": None}},
+    )
+
+    background_tasks.add_task(_bg_process, q_id, doc_ids)
+    return {"status": "processing", "message": "Regeneration started"}
+
+
 @router.get("/{q_id}/download")
 async def download_answers(q_id: str, user_id: str = Depends(get_current_user)):
     try:

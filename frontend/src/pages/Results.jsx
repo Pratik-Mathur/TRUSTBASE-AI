@@ -25,6 +25,7 @@ const Results = () => {
   const [questionnaire, setQuestionnaire] = useState(null);
   const [loading, setLoading] = useState(true);
   const [downloading, setDownloading] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
 
   const fetchQuestionnaire = async () => {
     try {
@@ -49,6 +50,20 @@ const Results = () => {
       return () => clearInterval(interval);
     }
   }, [questionnaire?.status]);
+
+  const handleRegenerate = async () => {
+    setRegenerating(true);
+    try {
+      await axios.post(`${API}/questionnaires/${id}/regenerate`, {}, { headers: getAuthHeaders() });
+      toast.success('Regenerating answers with all reference documents…');
+      // Immediately fetch to get the "processing" status — polling takes over from there
+      await fetchQuestionnaire();
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Failed to start regeneration');
+    } finally {
+      setRegenerating(false);
+    }
+  };
 
   const handleDownload = async () => {
     setDownloading(true);
@@ -114,14 +129,36 @@ const Results = () => {
           </div>
         </div>
         {questionnaire.status === 'completed' && (
+          <div className="flex items-center gap-3">
+            <button
+              data-testid="regenerate-btn"
+              onClick={handleRegenerate}
+              disabled={regenerating || isProcessing}
+              className="flex items-center gap-2 bg-slate-800/80 hover:bg-slate-700 disabled:opacity-50 text-white border border-slate-700 hover:border-slate-600 font-medium px-5 py-2.5 rounded-lg transition-all"
+            >
+              {regenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+              Regenerate Answers
+            </button>
+            <button
+              data-testid="download-btn"
+              onClick={handleDownload}
+              disabled={downloading}
+              className="flex items-center gap-2 bg-sky-500 hover:bg-sky-400 disabled:opacity-60 text-slate-950 font-semibold px-5 py-2.5 rounded-lg transition-all hover:scale-[1.02] shadow-[0_0_20px_-5px_rgba(56,189,248,0.4)]"
+            >
+              {downloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+              Download CSV
+            </button>
+          </div>
+        )}
+        {questionnaire.status === 'failed' && (
           <button
-            data-testid="download-btn"
-            onClick={handleDownload}
-            disabled={downloading}
-            className="flex items-center gap-2 bg-sky-500 hover:bg-sky-400 disabled:opacity-60 text-slate-950 font-semibold px-5 py-2.5 rounded-lg transition-all hover:scale-[1.02] shadow-[0_0_20px_-5px_rgba(56,189,248,0.4)]"
+            data-testid="regenerate-btn"
+            onClick={handleRegenerate}
+            disabled={regenerating}
+            className="flex items-center gap-2 bg-slate-800/80 hover:bg-slate-700 disabled:opacity-50 text-white border border-slate-700 hover:border-slate-600 font-medium px-5 py-2.5 rounded-lg transition-all"
           >
-            {downloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-            Download CSV
+            {regenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+            Regenerate Answers
           </button>
         )}
       </div>
