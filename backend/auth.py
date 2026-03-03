@@ -5,7 +5,7 @@ from passlib.context import CryptContext
 from datetime import datetime, timezone, timedelta
 import os
 
-SECRET_KEY = os.environ.get("JWT_SECRET", "answeriq-fallback-secret")
+SECRET_KEY = os.environ.get("JWT_SECRET", "trustbaseai-fallback-secret")
 ALGORITHM = "HS256"
 TOKEN_EXPIRE_DAYS = 7
 

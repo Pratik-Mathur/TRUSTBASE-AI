@@ -38,7 +38,7 @@ const DashboardLayout = ({ children }) => {
             <div className="w-7 h-7 rounded-md bg-sky-500/20 flex items-center justify-center">
               <Zap className="h-4 w-4 text-sky-400" />
             </div>
-            <span className="text-white font-bold text-lg font-jakarta">AnswerIQ</span>
+            <span className="text-white font-bold text-lg font-jakarta">TrustBase AI</span>
           </div>
           <button
             onClick={closeSidebar}
@@ -91,7 +91,7 @@ const DashboardLayout = ({ children }) => {
             <div className="w-6 h-6 rounded-md bg-sky-500/20 flex items-center justify-center">
               <Zap className="h-3.5 w-3.5 text-sky-400" />
             </div>
-            <span className="text-white font-bold font-jakarta">AnswerIQ</span>
+            <span className="text-white font-bold font-jakarta">TrustBase AI</span>
           </div>
           <button
             data-testid="mobile-menu-btn"

@@ -1,8 +1,7 @@
-# AnswerIQ (TrustBase AI) — Product Requirements Document
+# TrustBase AI — Product Requirements Document
 
 ## Overview
-**Product Name:** AnswerIQ  
-**Company:** TrustBase AI  
+**Product Name:** TrustBase AI  
 **Mission:** Automate vendor questionnaire answering with AI precision  
 **Last Updated:** February 2026
 

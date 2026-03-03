@@ -18,7 +18,7 @@ const LandingPage = () => {
             <div className="w-8 h-8 rounded-md bg-sky-500/20 flex items-center justify-center">
               <Zap className="h-4 w-4 text-sky-400" />
             </div>
-            <span className="text-white font-bold text-xl font-jakarta" data-testid="navbar-logo">AnswerIQ</span>
+            <span className="text-white font-bold text-xl font-jakarta" data-testid="navbar-logo">TrustBase AI</span>
           </div>
           <div className="flex items-center gap-3">
             <button
@@ -182,9 +182,9 @@ const LandingPage = () => {
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Zap className="h-4 w-4 text-sky-400" />
-            <span className="text-slate-400 text-sm font-medium font-jakarta">AnswerIQ</span>
+            <span className="text-slate-400 text-sm font-medium font-jakarta">TrustBase AI</span>
           </div>
-          <p className="text-slate-600 text-sm">Powered by TrustBase AI</p>
+          <p className="text-slate-600 text-sm">&copy; {new Date().getFullYear()} TrustBase AI</p>
         </div>
       </footer>
     </div>

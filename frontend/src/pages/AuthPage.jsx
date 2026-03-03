@@ -53,7 +53,7 @@ const AuthPage = () => {
             <div className="w-8 h-8 rounded-md bg-sky-500/20 flex items-center justify-center">
               <Zap className="h-4 w-4 text-sky-400" />
             </div>
-            <span className="text-white font-bold text-xl font-jakarta">AnswerIQ</span>
+            <span className="text-white font-bold text-xl font-jakarta">TrustBase AI</span>
           </div>
 
           <h1 className="text-2xl font-bold text-white font-jakarta mb-1">

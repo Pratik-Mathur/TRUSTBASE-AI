@@ -13,7 +13,7 @@ from document_routes import router as doc_router
 from questionnaire_routes import router as quest_router
 from database import client
 
-app = FastAPI(title="AnswerIQ API")
+app = FastAPI(title="TrustBase AI API")
 api_router = APIRouter(prefix="/api")
 
 api_router.include_router(auth_router, prefix="/auth", tags=["auth"])
@@ -23,7 +23,7 @@ api_router.include_router(quest_router, prefix="/questionnaires", tags=["questio
 
 @api_router.get("/")
 async def root():
-    return {"message": "AnswerIQ API v1.0"}
+    return {"message": "TrustBase AI API v1.0"}
 
 
 app.include_router(api_router)
