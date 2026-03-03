@@ -45,7 +45,7 @@ const CoverageSummaryCard = ({ answers }) => {
   answers.forEach((a) => { const c = (a.confidence || 'LOW').toUpperCase(); if (c in cc) cc[c]++; });
 
   return (
-    <div data-testid="coverage-summary" className="bg-[#0B1221] border border-slate-800 rounded-2xl p-6 mb-6">
+    <div data-testid="coverage-summary" className="bg-gradient-to-br from-sky-950/50 via-[#0B1221] to-[#0B1221] border border-sky-900/25 rounded-2xl p-6 mb-6">
       <h2 className="text-white font-semibold font-jakarta text-base mb-5">Coverage Summary</h2>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
         {[
@@ -168,7 +168,7 @@ const AnswerCard = ({ answer: initialAnswer, idx, qId, headers, onUpdate, canEdi
   return (
     <div
       data-testid={`answer-card-${idx}`}
-      className="bg-[#0B1221] border border-slate-800 rounded-xl p-6 hover:border-slate-700 transition-colors"
+      className="bg-[#0B1221] border border-slate-800 rounded-xl p-6 sm:p-7 hover:border-slate-700 transition-colors"
     >
       <div className="flex items-start justify-between gap-4 mb-4">
         <div className="flex items-start gap-3 flex-1 min-w-0">
@@ -291,7 +291,8 @@ const Results = () => {
   const [loading, setLoading] = useState(true);
   const [downloading, setDownloading] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
-  const [selectedVersionNum, setSelectedVersionNum] = useState(null); // null = current
+  const [selectedVersionNum, setSelectedVersionNum] = useState(null);
+  const [mounted, setMounted] = useState(false);
 
   const fetchQuestionnaire = useCallback(async () => {
     try {
@@ -302,6 +303,12 @@ const Results = () => {
   }, [id]);
 
   useEffect(() => { fetchQuestionnaire(); }, [fetchQuestionnaire]);
+
+  // Trigger mount animation
+  useEffect(() => {
+    const t = setTimeout(() => setMounted(true), 60);
+    return () => clearTimeout(t);
+  }, []);
 
   useEffect(() => {
     if (!questionnaire) return;
@@ -337,7 +344,7 @@ const Results = () => {
       link.remove();
       window.URL.revokeObjectURL(url);
       toast.success('Report downloaded');
-    } catch { toast.error('Download failed'); }
+    } catch { toast.error('Export failed. Please try again.'); }
     finally { setDownloading(false); }
   };
 
@@ -364,7 +371,7 @@ const Results = () => {
   const versions = questionnaire.versions || [];
 
   return (
-    <div className="p-8 max-w-5xl mx-auto">
+    <div className={`p-4 sm:p-8 max-w-5xl mx-auto transition-all duration-500 ease-out ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`}>
       {/* Back */}
       <button onClick={() => navigate('/dashboard')} className="flex items-center gap-2 text-slate-400 hover:text-white text-sm mb-6 transition-colors">
         <ArrowLeft className="h-4 w-4" /> Back to dashboard
@@ -403,7 +410,7 @@ const Results = () => {
               data-testid="download-report-btn"
               onClick={handleDownloadDocx}
               disabled={downloading}
-              className="flex items-center gap-2 bg-sky-500 hover:bg-sky-400 disabled:opacity-60 text-slate-950 font-semibold px-4 py-2.5 rounded-lg transition-all hover:scale-[1.02] shadow-[0_0_20px_-5px_rgba(56,189,248,0.4)] text-sm"
+              className="flex items-center gap-2 bg-gradient-to-r from-sky-400 to-cyan-400 hover:from-sky-300 hover:to-cyan-300 disabled:opacity-60 text-slate-950 font-bold px-5 py-2.5 rounded-lg transition-all hover:scale-[1.04] shadow-[0_0_30px_-4px_rgba(56,189,248,0.7)] text-sm"
             >
               {downloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
               Download Report
@@ -445,7 +452,6 @@ const Results = () => {
 
       {/* Coverage summary */}
       {displayAnswers.length > 0 && <CoverageSummaryCard answers={displayAnswers} />}
-
       {/* Processing state */}
       {isProcessing && (
         <div data-testid="processing-indicator" className="bg-blue-500/5 border border-blue-500/20 rounded-2xl p-12 text-center">
@@ -459,16 +465,25 @@ const Results = () => {
       {questionnaire.status === 'failed' && (
         <div className="bg-red-500/5 border border-red-500/20 rounded-2xl p-8 flex items-start gap-4 mb-6">
           <AlertCircle className="h-6 w-6 text-red-400 shrink-0 mt-0.5" />
-          <div>
+          <div className="flex-1">
             <h2 className="text-red-300 font-semibold font-jakarta mb-1">Processing failed</h2>
-            <p className="text-red-400/70 text-sm">{questionnaire.error_message || 'An unexpected error occurred.'}</p>
+            <p className="text-red-400/70 text-sm mb-4">{questionnaire.error_message || 'An unexpected error occurred.'}</p>
+            <button
+              data-testid="retry-btn"
+              onClick={handleRegenerate}
+              disabled={regenerating}
+              className="flex items-center gap-2 bg-red-500/15 hover:bg-red-500/25 disabled:opacity-60 text-red-300 border border-red-500/30 px-4 py-2 rounded-lg text-sm font-medium transition-all"
+            >
+              {regenerating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+              Retry with all documents
+            </button>
           </div>
         </div>
       )}
 
       {/* Answers */}
       {displayAnswers.length > 0 && (
-        <div data-testid="answers-list" className="space-y-4">
+        <div data-testid="answers-list" className="space-y-5">
           {displayAnswers.map((ans, i) => (
             <AnswerCard
               key={`${isCurrentVersion ? 'cur' : selectedVersionNum}-${i}`}

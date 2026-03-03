@@ -54,7 +54,7 @@ function App() {
           />
         </Routes>
       </BrowserRouter>
-      <Toaster richColors position="top-right" />
+      <Toaster richColors position="top-right" toastOptions={{ duration: 5000 }} />
     </AuthProvider>
   );
 }

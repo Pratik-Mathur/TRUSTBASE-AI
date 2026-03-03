@@ -42,7 +42,7 @@ const NewQuestionnaire = () => {
       setLoadingDocs(false);
       setStep(1);
     } catch (err) {
-      toast.error(err.response?.data?.detail || 'Upload failed');
+      toast.error(err.response?.data?.detail || 'Upload failed. Please try again.');
     } finally {
       setUploading(false);
       e.target.value = '';
@@ -78,7 +78,7 @@ const NewQuestionnaire = () => {
   };
 
   return (
-    <div className="p-8 max-w-3xl mx-auto">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-3xl mx-auto">
       {/* Header */}
       <button
         onClick={() => navigate('/dashboard')}

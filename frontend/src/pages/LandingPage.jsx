@@ -55,9 +55,9 @@ const LandingPage = () => {
             AI-Powered Questionnaire Answering
           </div>
 
-          <h1 className="text-5xl md:text-7xl font-bold tracking-tight leading-[1.1] font-jakarta mb-6 animate-fade-in-up">
+          <h1 className="text-5xl sm:text-7xl md:text-8xl font-extrabold tracking-tighter leading-[1.0] font-jakarta mb-8 animate-fade-in-up">
             Answer Any Questionnaire
-            <span className="block text-sky-400"> in Minutes</span>
+            <span className="block bg-gradient-to-r from-sky-400 via-cyan-300 to-sky-500 bg-clip-text text-transparent mt-1 pb-2"> in Minutes</span>
           </h1>
 
           <p className="text-lg md:text-xl text-slate-300 leading-relaxed mb-10 max-w-2xl mx-auto animate-fade-in-up delay-100">

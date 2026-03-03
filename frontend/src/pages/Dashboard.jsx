@@ -68,7 +68,7 @@ const Dashboard = () => {
       toast.success('Document uploaded successfully');
       fetchDocs();
     } catch (err) {
-      toast.error(err.response?.data?.detail || 'Upload failed');
+      toast.error(err.response?.data?.detail || 'Upload failed. Please try again.');
     } finally {
       setUploading(false);
       e.target.value = '';
@@ -87,7 +87,7 @@ const Dashboard = () => {
   const formatSize = (n) => n >= 1000 ? `${(n / 1000).toFixed(1)}k chars` : `${n} chars`;
 
   return (
-    <div className="p-8 max-w-6xl mx-auto">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto">
       {/* Header */}
       <div className="mb-8 flex items-center justify-between">
         <div>
