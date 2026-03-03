@@ -99,6 +99,7 @@ GET  /api/questionnaires/{id}/download — Download answered CSV
 - [x] Results page polling (3s interval) while AI processes
 - [x] Dashboard with stats, tabs (Documents / Questionnaires)
 - [x] Design: Plus Jakarta Sans, dark navy (#020817), sky blue (#38BDF8)
+- [x] Delete Questionnaire: three-dot menu per row → dropdown → confirmation dialog → DELETE /api/questionnaires/{id} (tested Feb 2026)
 
 ---
 
@@ -124,7 +125,7 @@ GET  /api/questionnaires/{id}/download — Download answered CSV
 ---
 
 ## Next Tasks
-1. Test full AI processing flow end-to-end with real questionnaire
-2. Add DOCX support for questionnaire and document uploads
-3. Add answer editing capability in Results page
-4. Add re-process button in Results page
+1. Add shareable read-only results link for vendors/stakeholders (P2)
+2. Add questionnaire name editing from Dashboard
+3. Add re-process with different documents option
+4. Add DOCX upload support for questionnaire/document uploads
