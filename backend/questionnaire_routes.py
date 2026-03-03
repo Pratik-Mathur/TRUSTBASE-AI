@@ -33,39 +33,91 @@ def extract_text(file_bytes: bytes, ext: str) -> str:
     return file_bytes.decode("utf-8", errors="ignore").strip()
 
 
+def _is_title_or_heading(text: str) -> bool:
+    """Return True for lines that look like titles/headings, not questions."""
+    t = text.strip()
+    # All-caps or title-case short lines with no "?"
+    if not t.endswith("?") and (t.isupper() or (len(t.split()) <= 6 and t.istitle())):
+        return True
+    # Lines that are clearly document titles (contain "Questionnaire", "Form", "Policy", etc. as standalone labels)
+    heading_words = {"questionnaire", "form", "assessment", "survey", "checklist", "template", "document", "policy"}
+    lower_words = set(t.lower().split())
+    if not t.endswith("?") and len(t.split()) <= 8 and heading_words & lower_words:
+        return True
+    return False
+
+
 def parse_questions(text: str) -> List[str]:
-    """Extract questions from text. Tries numbered list, falls back to line-by-line."""
+    """
+    Extract questions with strict filtering:
+    Pass 1 — Q1/Q2/Q3 style (e.g. "Q1. Does your company...?")
+    Pass 2 — Numbered items (1. 2.) that end with "?"
+    Pass 3 — Any standalone line ending with "?"
+    Titles, headings, and plain sentences are always skipped.
+    """
     lines = text.split("\n")
-    questions = []
+
+    # Pass 1: Q-numbered style — Q1, Q2, Q3...
+    q_num_pattern = re.compile(r"^\s*Q(\d+)[\.\):\s]\s*(.+)", re.IGNORECASE)
+    q_style = []
     current = ""
-    numbered_pattern = re.compile(r"^\s*(?:Question\s*)?\d+[\.\):\s]\s*(.+)", re.IGNORECASE)
+    current_idx = -1
+    for line in lines:
+        stripped = line.strip()
+        m = q_num_pattern.match(stripped)
+        if m:
+            if current:
+                q_style.append(current.strip())
+            current = m.group(2).strip()
+        elif current and stripped:
+            current += " " + stripped
+        elif not stripped and current:
+            q_style.append(current.strip())
+            current = ""
+    if current:
+        q_style.append(current.strip())
 
-    has_numbered = any(numbered_pattern.match(l.strip()) for l in lines)
+    if q_style:
+        return [q for q in q_style if len(q) > 5][:MAX_QUESTIONS]
 
-    if has_numbered:
-        for line in lines:
-            line = line.strip()
-            if not line:
-                if current:
-                    questions.append(current.strip())
-                    current = ""
-                continue
-            m = numbered_pattern.match(line)
-            if m:
-                if current:
-                    questions.append(current.strip())
-                current = m.group(1).strip()
-            elif current:
-                current += " " + line
-        if current:
-            questions.append(current.strip())
-    else:
-        for line in lines:
-            line = line.strip()
-            if line and len(line) > 10:
-                questions.append(line)
+    # Pass 2: Numbered items (1. 2.) that end with "?"
+    num_pattern = re.compile(r"^\s*\d+[\.\):\s]\s*(.+)", re.IGNORECASE)
+    num_style = []
+    current = ""
+    for line in lines:
+        stripped = line.strip()
+        if not stripped:
+            if current:
+                full = current.strip()
+                if full.endswith("?") and not _is_title_or_heading(full):
+                    num_style.append(full)
+                current = ""
+            continue
+        m = num_pattern.match(stripped)
+        if m:
+            if current:
+                full = current.strip()
+                if full.endswith("?") and not _is_title_or_heading(full):
+                    num_style.append(full)
+            current = m.group(1).strip()
+        elif current:
+            current += " " + stripped
+    if current:
+        full = current.strip()
+        if full.endswith("?") and not _is_title_or_heading(full):
+            num_style.append(full)
 
-    return [q for q in questions if len(q) > 10][:MAX_QUESTIONS]
+    if num_style:
+        return num_style[:MAX_QUESTIONS]
+
+    # Pass 3: Any line ending with "?" (skip titles/headings)
+    fallback = []
+    for line in lines:
+        stripped = line.strip()
+        if stripped.endswith("?") and len(stripped) > 10 and not _is_title_or_heading(stripped):
+            fallback.append(stripped)
+
+    return fallback[:MAX_QUESTIONS]
 
 
 class ProcessRequest(BaseModel):

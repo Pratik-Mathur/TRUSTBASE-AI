@@ -8,11 +8,16 @@ from typing import List
 from emergentintegrations.llm.chat import LlmChat, UserMessage
 
 logger = logging.getLogger(__name__)
-BATCH_SIZE = 20
+
+# GPT-4o has 128k token context (~500k chars).
+# Pass up to 45k chars per doc so full content is available.
+MAX_CHARS_PER_DOC = 45_000
+# Smaller batch keeps the per-request payload manageable
+BATCH_SIZE = 10
 
 
 async def answer_questions_with_docs(questions: List[str], documents: List[dict]) -> List[dict]:
-    """Answer a list of questions using reference documents."""
+    """Answer questions using the full content of all reference documents."""
     if not documents:
         return [
             {"question": q, "answer": "No reference documents provided.", "found": False,
@@ -31,34 +36,44 @@ async def answer_questions_with_docs(questions: List[str], documents: List[dict]
 async def _process_batch(questions: List[str], documents: List[dict]) -> List[dict]:
     api_key = os.environ.get("EMERGENT_LLM_KEY")
 
-    # Build document context, cap per-doc to fit context window
-    max_chars_per_doc = max(3000, 15000 // max(len(documents), 1))
+    # Pass the FULL content of every document (capped at MAX_CHARS_PER_DOC each).
+    # GPT-4o's 128k context handles this comfortably.
     doc_context = ""
     for doc in documents:
-        content = doc["content"][:max_chars_per_doc]
-        doc_context += f"\n\n=== DOCUMENT: {doc['name']} ===\n{content}"
+        content = doc["content"][:MAX_CHARS_PER_DOC]
+        doc_context += f"\n\n=== DOCUMENT: {doc['name']} ===\n{content}\n=== END OF {doc['name']} ==="
 
     numbered_qs = "\n".join([f"{i + 1}. {q}" for i, q in enumerate(questions)])
 
-    prompt = f"""You are answering vendor compliance questionnaire questions from reference documents.
+    prompt = f"""You are a compliance expert answering a vendor security questionnaire.
+The reference documents below contain all the policies, procedures, and technical details needed to answer the questions.
+
+IMPORTANT INSTRUCTIONS:
+- Read ALL provided documents THOROUGHLY before answering each question.
+- Search for related terms, synonyms, and implied information — not just exact keyword matches.
+  Example: "Do you encrypt stored data?" can be answered by text saying "All data at rest is protected with AES-256".
+- If a document addresses the topic indirectly or partially, use that to form an answer.
+- Only set "found": false if NO relevant information exists across ALL documents after careful searching.
+- Cite the exact document name and a brief supporting quote for every found answer.
 
 REFERENCE DOCUMENTS:
 {doc_context}
 
-QUESTIONS:
+QUESTIONS TO ANSWER:
 {numbered_qs}
 
 Respond with ONLY a valid JSON array (no markdown, no explanation):
 [
   {{
     "question_index": 1,
-    "answer": "Detailed answer here",
+    "answer": "Detailed, specific answer drawn from the documents",
     "found": true,
-    "source_document": "Document Name.pdf",
-    "citation": "Supporting quote max 150 chars"
+    "source_document": "exact document filename",
+    "citation": "brief supporting quote or section reference (max 200 chars)"
   }}
 ]
-If information is not found, set "found": false, "answer": "Not found in references", "source_document": null, "citation": null."""
+
+Set "found": false and "answer": "Not found in references" ONLY when the topic is truly absent from every document."""
 
     try:
         chat = LlmChat(
@@ -66,7 +81,8 @@ If information is not found, set "found": false, "answer": "Not found in referen
             session_id=str(uuid.uuid4()),
             system_message=(
                 "You are a compliance expert answering vendor questionnaire questions. "
-                "Use only the provided reference documents. "
+                "Search the provided documents broadly and thoroughly — look for related terms and implied answers. "
+                "Be liberal in finding relevant content; only return 'Not found' when truly nothing relevant exists. "
                 "Always respond with a valid JSON array only — no markdown, no extra text."
             ),
         ).with_model("openai", "gpt-4o")
