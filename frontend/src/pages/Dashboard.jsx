@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import axios from 'axios';
 import {
   Upload, FileText, Trash2, PlusCircle, CheckCircle,
-  Clock, Loader2, AlertCircle, FileUp, ChevronRight, Database
+  Clock, Loader2, AlertCircle, FileUp, ChevronRight, Database, MoreVertical
 } from 'lucide-react';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
@@ -38,6 +38,9 @@ const Dashboard = () => {
   const [loadingQs, setLoadingQs] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [tab, setTab] = useState('documents');
+  const [openMenuId, setOpenMenuId] = useState(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   const fetchDocs = async () => {
     try {
@@ -56,6 +59,14 @@ const Dashboard = () => {
   };
 
   useEffect(() => { fetchDocs(); fetchQuestionnaires(); }, []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    if (!openMenuId) return;
+    const handler = () => setOpenMenuId(null);
+    document.addEventListener('click', handler);
+    return () => document.removeEventListener('click', handler);
+  }, [openMenuId]);
 
   const handleDocUpload = async (e) => {
     const file = e.target.files?.[0];
@@ -81,6 +92,29 @@ const Dashboard = () => {
       setDocs((prev) => prev.filter((d) => d.id !== id));
       toast.success('Document deleted');
     } catch { toast.error('Delete failed'); }
+  };
+
+  const toggleMenu = (e, id) => {
+    e.stopPropagation();
+    setOpenMenuId((prev) => (prev === id ? null : id));
+  };
+
+  const openDeleteConfirm = (e, id) => {
+    e.stopPropagation();
+    setOpenMenuId(null);
+    setDeleteConfirmId(id);
+  };
+
+  const handleDeleteQuestionnaire = async () => {
+    if (!deleteConfirmId) return;
+    setDeleting(true);
+    try {
+      await axios.delete(`${API}/questionnaires/${deleteConfirmId}`, { headers: getAuthHeaders() });
+      setQuestionnaires((prev) => prev.filter((q) => q.id !== deleteConfirmId));
+      setDeleteConfirmId(null);
+      toast.success('Questionnaire deleted');
+    } catch { toast.error('Failed to delete questionnaire'); }
+    finally { setDeleting(false); }
   };
 
   const formatDate = (iso) => new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -234,14 +268,74 @@ const Dashboard = () => {
                       <p className="text-slate-500 text-xs mt-0.5">{q.question_count} questions · {formatDate(q.created_at)}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
                     <StatusBadge status={q.status} />
-                    <ChevronRight className="h-4 w-4 text-slate-500" />
+                    <div className="relative">
+                      <button
+                        data-testid={`questionnaire-menu-${q.id}`}
+                        onClick={(e) => toggleMenu(e, q.id)}
+                        className="text-slate-500 hover:text-white transition-colors p-1 rounded hover:bg-slate-800"
+                      >
+                        <MoreVertical className="h-4 w-4" />
+                      </button>
+                      {openMenuId === q.id && (
+                        <div className="absolute right-0 top-8 bg-[#0B1221] border border-slate-700 rounded-lg shadow-xl z-50 min-w-[140px]">
+                          <button
+                            data-testid={`delete-questionnaire-${q.id}`}
+                            onClick={(e) => openDeleteConfirm(e, q.id)}
+                            className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 transition-colors rounded-lg"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            Delete
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {/* Delete confirmation dialog */}
+      {deleteConfirmId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setDeleteConfirmId(null)} />
+          <div
+            data-testid="delete-confirm-dialog"
+            className="relative bg-[#0B1221] border border-slate-700 rounded-2xl p-6 w-full max-w-md shadow-2xl"
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <div className="bg-red-500/10 rounded-full p-2.5">
+                <Trash2 className="h-5 w-5 text-red-400" />
+              </div>
+              <h2 className="text-lg font-semibold text-white">Delete Questionnaire</h2>
+            </div>
+            <p className="text-slate-400 text-sm mb-6">
+              This will permanently delete the questionnaire and all its answers. This action cannot be undone.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                data-testid="delete-cancel-btn"
+                onClick={() => setDeleteConfirmId(null)}
+                disabled={deleting}
+                className="px-4 py-2 text-sm font-medium text-slate-300 hover:text-white border border-slate-700 hover:border-slate-600 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                data-testid="delete-confirm-btn"
+                onClick={handleDeleteQuestionnaire}
+                disabled={deleting}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-red-600 hover:bg-red-500 text-white rounded-lg transition-colors disabled:opacity-60"
+              >
+                {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                {deleting ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

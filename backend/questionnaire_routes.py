@@ -294,6 +294,18 @@ async def get_questionnaire(q_id: str, user_id: str = Depends(get_current_user))
     }
 
 
+@router.delete("/{q_id}")
+async def delete_questionnaire(q_id: str, user_id: str = Depends(get_current_user)):
+    try:
+        obj_id = ObjectId(q_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid ID")
+    result = await db.questionnaires.delete_one({"_id": obj_id, "user_id": user_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Not found")
+    return {"success": True}
+
+
 @router.post("/{q_id}/process")
 async def process_questionnaire(
     q_id: str, body: ProcessRequest, background_tasks: BackgroundTasks,

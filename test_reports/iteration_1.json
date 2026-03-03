@@ -1,0 +1,42 @@
+{
+  "summary": "Tested Delete Questionnaire feature end-to-end. All backend and frontend tests passed. Feature is fully functional.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_delete_questionnaire.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": ["/app/backend/tests/test_delete_questionnaire.py"],
+  "success_rate": {"backend": "100% (5/5 tests)", "frontend": "100% (7/7 tests)"},
+  "seed_data_creation": "Created user testdelete_iq@example.com / Test1234! for testing",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Delete Questionnaire feature is fully working. Backend DELETE /api/questionnaires/{id} returns 200 {success:true} on success, 404 for missing ID, 400 for invalid ID format. Frontend three-dot menu, dropdown, confirm dialog, cancel, delete, and success toast all work correctly. Stats counter updates after deletion.",
+  "tests_executed": {
+    "backend": [
+      "DELETE returns 200 with {success: true}",
+      "DELETE returns 404 for non-existent ID",
+      "DELETE returns 400 for invalid ID format",
+      "Deleted questionnaire no longer appears in list",
+      "DELETE requires authentication (401/403 without token)"
+    ],
+    "frontend": [
+      "Three-dot menu button (MoreVertical icon) present with correct data-testid",
+      "Clicking menu shows dropdown with Delete option",
+      "Clicking Delete shows confirmation dialog",
+      "Clicking Cancel closes dialog without deleting",
+      "Item remains in list after Cancel",
+      "Clicking outside dropdown closes it",
+      "Clicking Delete confirm removes item from list and shows 'Questionnaire deleted' toast"
+    ]
+  }
+}
