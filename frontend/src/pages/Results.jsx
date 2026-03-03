@@ -300,7 +300,7 @@ const Results = () => {
       setQuestionnaire(res.data);
     } catch { toast.error('Failed to load questionnaire'); }
     finally { setLoading(false); }
-  }, [id]);
+  }, [id, getAuthHeaders]);
 
   useEffect(() => { fetchQuestionnaire(); }, [fetchQuestionnaire]);
 
@@ -316,7 +316,7 @@ const Results = () => {
       const t = setInterval(fetchQuestionnaire, 3000);
       return () => clearInterval(t);
     }
-  }, [questionnaire?.status, fetchQuestionnaire]);
+  }, [questionnaire, fetchQuestionnaire]);
 
   const handleRegenerate = async () => {
     setRegenerating(true);

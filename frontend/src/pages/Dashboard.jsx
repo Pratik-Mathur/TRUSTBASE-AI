@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'sonner';
@@ -42,23 +42,23 @@ const Dashboard = () => {
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   const [deleting, setDeleting] = useState(false);
 
-  const fetchDocs = async () => {
+  const fetchDocs = useCallback(async () => {
     try {
       const res = await axios.get(`${API}/documents`, { headers: getAuthHeaders() });
       setDocs(res.data);
     } catch { toast.error('Failed to load documents'); }
     finally { setLoadingDocs(false); }
-  };
+  }, [getAuthHeaders]);
 
-  const fetchQuestionnaires = async () => {
+  const fetchQuestionnaires = useCallback(async () => {
     try {
       const res = await axios.get(`${API}/questionnaires`, { headers: getAuthHeaders() });
       setQuestionnaires(res.data);
     } catch { toast.error('Failed to load questionnaires'); }
     finally { setLoadingQs(false); }
-  };
+  }, [getAuthHeaders]);
 
-  useEffect(() => { fetchDocs(); fetchQuestionnaires(); }, []);
+  useEffect(() => { fetchDocs(); fetchQuestionnaires(); }, [fetchDocs, fetchQuestionnaires]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
