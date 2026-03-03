@@ -22,9 +22,10 @@ Businesses spend hours manually answering vendor security questionnaires. Answer
 ## Architecture
 - **Frontend:** React 19 + Tailwind CSS + shadcn/ui (dark navy theme)
 - **Backend:** FastAPI (Python) with async background task processing
-- **Database:** MongoDB (motor async driver)
+- **Database:** Supabase (PostgreSQL) via SQLAlchemy async + asyncpg
 - **AI:** OpenAI GPT-4o via emergentintegrations (EMERGENT_LLM_KEY)
-- **Auth:** JWT-based (python-jose + passlib/bcrypt)
+- **Auth:** JWT-based (python-jose + passlib/bcrypt), custom — NOT Supabase Auth
+- **Migrations:** Alembic (Transaction Pooler, port 6543)
 
 ### Backend Files
 - `server.py` — FastAPI app, CORS, router registration

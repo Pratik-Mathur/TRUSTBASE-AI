@@ -11,7 +11,6 @@ load_dotenv(ROOT_DIR / '.env')
 from auth_routes import router as auth_router
 from document_routes import router as doc_router
 from questionnaire_routes import router as quest_router
-from database import client
 
 app = FastAPI(title="TrustBase AI API")
 api_router = APIRouter(prefix="/api")
@@ -40,8 +39,3 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
-
-
-@app.on_event("shutdown")
-async def shutdown_db_client():
-    client.close()

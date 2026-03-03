@@ -1,16 +1,17 @@
 import io
 import logging
-from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form
-from bson import ObjectId
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, delete
 
-from database import db
+from database import get_db
 from auth import get_current_user
-from models import DocumentModel
+from orm_models import Document
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
-MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
+MAX_FILE_SIZE = 10 * 1024 * 1024
 MAX_CONTENT_CHARS = 50_000
 
 
@@ -28,18 +29,24 @@ def extract_text_from_txt(file_bytes: bytes) -> str:
 
 
 @router.get("")
-async def list_documents(user_id: str = Depends(get_current_user)):
-    docs = await db.documents.find(
-        {"user_id": user_id}, {"content": 0}
-    ).sort("created_at", -1).to_list(200)
+async def list_documents(
+    user_id: str = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(
+        select(Document)
+        .where(Document.user_id == user_id)
+        .order_by(Document.created_at.desc())
+    )
+    docs = result.scalars().all()
     return [
         {
-            "id": str(d["_id"]),
-            "user_id": d["user_id"],
-            "name": d["name"],
-            "file_type": d["file_type"],
-            "size_chars": d["size_chars"],
-            "created_at": d["created_at"].isoformat() if hasattr(d["created_at"], "isoformat") else d["created_at"],
+            "id": d.id,
+            "user_id": d.user_id,
+            "name": d.name,
+            "file_type": d.file_type,
+            "size_chars": d.size_chars,
+            "created_at": d.created_at.isoformat() if d.created_at else None,
         }
         for d in docs
     ]
@@ -49,6 +56,7 @@ async def list_documents(user_id: str = Depends(get_current_user)):
 async def upload_document(
     file: UploadFile = File(...),
     user_id: str = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
     file_bytes = await file.read()
     if len(file_bytes) > MAX_FILE_SIZE:
@@ -71,27 +79,38 @@ async def upload_document(
         raise HTTPException(status_code=400, detail="Could not extract text from file")
 
     content = content[:MAX_CONTENT_CHARS]
-    doc = DocumentModel(
+    doc = Document(
         user_id=user_id,
         name=fname,
         file_type=ext,
         content=content,
         size_chars=len(content),
     )
-    rec = doc.model_dump(exclude={"id"})
-    result = await db.documents.insert_one(rec)
+    db.add(doc)
+    await db.commit()
+    await db.refresh(doc)
+
     return {
-        "id": str(result.inserted_id),
-        "name": fname,
-        "file_type": ext,
-        "size_chars": len(content),
-        "created_at": doc.created_at.isoformat(),
+        "id": doc.id,
+        "name": doc.name,
+        "file_type": doc.file_type,
+        "size_chars": doc.size_chars,
+        "created_at": doc.created_at.isoformat() if doc.created_at else None,
     }
 
 
 @router.delete("/{doc_id}")
-async def delete_document(doc_id: str, user_id: str = Depends(get_current_user)):
-    result = await db.documents.delete_one({"_id": ObjectId(doc_id), "user_id": user_id})
-    if result.deleted_count == 0:
+async def delete_document(
+    doc_id: str,
+    user_id: str = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(
+        select(Document).where(Document.id == doc_id, Document.user_id == user_id)
+    )
+    doc = result.scalar_one_or_none()
+    if not doc:
         raise HTTPException(status_code=404, detail="Document not found")
+    await db.delete(doc)
+    await db.commit()
     return {"success": True}
