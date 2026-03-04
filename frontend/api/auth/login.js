@@ -10,7 +10,15 @@ export default async function handler(req, res) {
       return res.status(400).json({ detail: 'Email and password required' });
     }
 
-    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
+    const url =
+      process.env.SUPABASE_URL ||
+      process.env.NEXT_PUBLIC_SUPABASE_URL ||
+      process.env.REACT_APP_SUPABASE_URL;
+    const key =
+      process.env.SUPABASE_ANON_KEY ||
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+      process.env.REACT_APP_SUPABASE_ANON_KEY;
+    const supabase = createClient(url, key);
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
       return res.status(401).json({ detail: error.message });
