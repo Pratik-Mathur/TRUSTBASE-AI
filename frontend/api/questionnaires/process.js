@@ -1,6 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
 import { Buffer } from 'buffer';
-import { createClient } from '@supabase/supabase-js';
 
 function getSupabase({ useServiceRole = false } = {}) {
   const url =
