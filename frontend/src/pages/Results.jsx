@@ -135,11 +135,7 @@ const AnswerCard = ({ answer: initialAnswer, idx, qId, headers, onUpdate, canEdi
   const handleSave = async () => {
     setSaving(true);
     try {
-      const res = await axios.patch(
-        `${API}/questionnaires/${qId}/answers/${idx}`,
-        { answer: editText },
-        { headers }
-      );
+      const res = await axios.patch(`/api/questionnaires/answers/save`, { answer: editText }, { headers, params: { id: qId, idx } });
       const updated = { ...answer, ...res.data };
       setAnswer(updated);
       onUpdate(idx, updated);
@@ -152,11 +148,7 @@ const AnswerCard = ({ answer: initialAnswer, idx, qId, headers, onUpdate, canEdi
   const handleRegenerate = async () => {
     setRegenerating(true);
     try {
-      const res = await axios.post(
-        `${API}/questionnaires/${qId}/answers/${idx}/regenerate`,
-        {},
-        { headers }
-      );
+      const res = await axios.post(`/api/questionnaires/answers/regenerate`, {}, { headers, params: { id: qId, idx } });
       const updated = res.data;
       setAnswer(updated);
       setEditText(updated.answer);
@@ -322,7 +314,7 @@ const Results = () => {
   const handleRegenerate = async () => {
     setRegenerating(true);
     try {
-      await axios.post(`${API}/questionnaires/${id}/regenerate`, {}, { headers: getAuthHeaders() });
+      await axios.post(`/api/questionnaires/regenerate`, {}, { headers: getAuthHeaders(), params: { id } });
       toast.success('Regenerating with all reference documents…');
       setSelectedVersionNum(null);
       await fetchQuestionnaire();
@@ -333,9 +325,7 @@ const Results = () => {
   const handleDownloadDocx = async () => {
     setDownloading(true);
     try {
-      const res = await axios.get(`${API}/questionnaires/${id}/download-docx`, {
-        headers: getAuthHeaders(), responseType: 'blob',
-      });
+      const res = await axios.get(`/api/questionnaires/download-docx`, { headers: getAuthHeaders(), responseType: 'blob', params: { id } });
       const url = window.URL.createObjectURL(new Blob([res.data]));
       const link = document.createElement('a');
       link.href = url;
