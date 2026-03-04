@@ -65,7 +65,7 @@ const NewQuestionnaire = () => {
     setProcessing(true);
     try {
       await axios.post(
-        `${API}/questionnaires/${questionnaire.id}/process`,
+        `/api/questionnaires/process?id=${encodeURIComponent(questionnaire.id)}`,
         { document_ids: docs.length > 0 ? Array.from(selectedDocs) : [] },
         { headers: getAuthHeaders() }
       );
