@@ -86,6 +86,18 @@ export default async function handler(req, res) {
       questions = extractQuestionsText(text);
     }
 
+    // Persist metadata for later processing
+    const safeId = path.replace(/[\/\\]/g, '_');
+    const metaPath = `meta/${safeId}.json`;
+    const meta = {
+      id: path,
+      name: file.originalFilename,
+      question_count: questions.length,
+      questions,
+      created_at: new Date().toISOString(),
+    };
+    await supabase.storage.from('tb-questionnaires').upload(metaPath, Buffer.from(JSON.stringify(meta), 'utf-8'), { upsert: true, contentType: 'application/json' });
+
     return res.status(200).json({
       id: path,
       name: file.originalFilename,

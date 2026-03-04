@@ -21,7 +21,8 @@ export default async function handler(req, res) {
 
   try {
     const admin = getSupabase({ useServiceRole: true });
-    const statusPath = `jobs/${id.replace(/[\/\\]/g, '_')}.status.json`;
+    const safeId = id.replace(/[\/\\]/g, '_');
+    const statusPath = `jobs/${safeId}.status.json`;
     const { data, error } = await admin.storage.from('tb-questionnaires').download(statusPath);
     let status = 'processing';
     if (!error && data) {
@@ -29,12 +30,20 @@ export default async function handler(req, res) {
       const obj = JSON.parse(text || '{}');
       status = obj.status || status;
     }
+    let answers = [];
+    const answersPath = `jobs/${safeId}.answers.json`;
+    const { data: aData } = await admin.storage.from('tb-questionnaires').download(answersPath);
+    if (aData) {
+      const aText = await aData.text();
+      const aObj = JSON.parse(aText || '{}');
+      answers = aObj.answers || [];
+    }
     return res.status(200).json({
       id,
       name,
       status,
       questions: [],
-      answers: [],
+      answers,
       versions: [],
     });
   } catch {
