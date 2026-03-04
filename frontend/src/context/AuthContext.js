@@ -7,6 +7,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!supabase) { setLoading(false); return; }
     supabase.auth.getSession().then(({ data }) => {
       const session = data?.session || null;
       if (session?.user) {
@@ -18,6 +19,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
+    if (!supabase) throw { response: { data: { detail: 'Supabase not configured' } } };
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw { response: { data: { detail: error.message } } };
     const token = data.session?.access_token || '';
@@ -29,6 +31,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const register = async (name, email, password) => {
+    if (!supabase) throw { response: { data: { detail: 'Supabase not configured' } } };
     const { data, error } = await supabase.auth.signUp({ email, password, options: { data: { name } } });
     if (error) throw { response: { data: { detail: error.message } } };
     const token = data.session?.access_token || '';
@@ -42,7 +45,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
-    await supabase.auth.signOut();
+    if (supabase) await supabase.auth.signOut();
     localStorage.removeItem('trustbaseai_token');
     setUser(null);
   };
