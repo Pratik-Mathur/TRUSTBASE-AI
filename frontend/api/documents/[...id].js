@@ -22,7 +22,8 @@ export default async function handler(req, res) {
   if (!userData?.user) return res.status(401).json({ detail: 'Unauthorized' });
   const segs = Array.isArray(req.query.id) ? req.query.id : [req.query.id];
   const id = segs.map((s) => decodeURIComponent(s)).join('/');
-  const { error } = await supabase.storage.from('tb-docs').remove([id]);
+  const admin = getSupabase({ useServiceRole: true });
+  const { error } = await admin.storage.from('tb-docs').remove([id]);
   if (error) return res.status(200).json({ success: false });
   return res.status(200).json({ success: true });
 }
