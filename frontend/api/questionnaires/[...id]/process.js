@@ -37,8 +37,11 @@ export default async function handler(req, res) {
   const user = await getUser(req);
   if (!user) return res.status(401).json({ detail: 'Unauthorized' });
 
-  const id = req.query.id;
-  if (!id || typeof id !== 'string') return res.status(400).json({ detail: 'Invalid questionnaire id' });
+  const idSegments = Array.isArray(req.query.id) ? req.query.id : [req.query.id];
+  if (!idSegments.length || idSegments.some((s) => typeof s !== 'string' || !s)) {
+    return res.status(400).json({ detail: 'Invalid questionnaire id' });
+  }
+  const safeId = idSegments.join('_');
 
   await ensureBucket();
   const admin = getSupabase({ useServiceRole: true });
@@ -51,7 +54,7 @@ export default async function handler(req, res) {
     user_id: user.id,
   };
 
-  const path = `jobs/${id}.status.json`;
+  const path = `jobs/${safeId}.status.json`;
   const dataBuf = Buffer.from(JSON.stringify(statusObj), 'utf-8');
   const { error } = await admin.storage.from('tb-questionnaires').upload(path, dataBuf, { upsert: true, contentType: 'application/json' });
   if (error) return res.status(500).json({ detail: 'Failed to start processing' });
