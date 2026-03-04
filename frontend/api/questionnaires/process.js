@@ -87,9 +87,26 @@ export default async function handler(req, res) {
     retention: ['retention','retained','store','stored','storage duration','data retention'],
     logging: ['logs','logging','audit','auditing'],
     residency: ['residency','location','region','data center','geo','geography'],
+    uptime: ['uptime','availability','service level','sla','99','%','nines'],
+    breach: ['breach','incident','notify','notification','customers','alert','disclosure'],
+    audit: ['audit','assessment','penetration','pentest','third-party','external'],
   };
   function tokenize(text) {
     return text.toLowerCase().replace(/[^a-z0-9\s]/g,' ').split(/\s+/).filter(Boolean);
+  }
+  function getCategoriesFromQuestion(qStr) {
+    const cats = [];
+    const lower = qStr.toLowerCase();
+    for (const key of Object.keys(synonyms)) {
+      if (synonyms[key].some(k => lower.includes(k))) cats.push(key);
+    }
+    return cats;
+  }
+  function sentenceMatchesCategory(sentence, cats) {
+    const s = sentence.toLowerCase();
+    if (cats.length === 0) return true;
+    // Require at least one token from any matched category
+    return cats.some(cat => synonyms[cat].some(k => s.includes(k)));
   }
   function scoreSentence(q, s) {
     const qTokens = tokenize(q).filter((w)=>w.length>2);
@@ -118,14 +135,18 @@ export default async function handler(req, res) {
   }
   const answers = questions.map((q) => {
     let best = { score: 0, domainHits: 0, sentence: '', doc: '' };
+    const cats = getCategoriesFromQuestion(q);
     for (const d of docs) {
       for (const s of d.sentences) {
         const { norm, domainHits } = scoreSentence(q, s);
-        if (norm > best.score) best = { score: norm, domainHits, sentence: s, doc: d.name };
+        // Penalize sentences that don't match the question's category tokens
+        const categoryMatch = sentenceMatchesCategory(s, cats);
+        const adjusted = categoryMatch ? norm : norm * 0.3;
+        if (adjusted > best.score) best = { score: adjusted, domainHits, sentence: s, doc: d.name };
       }
     }
-    const found = best.score >= 0.35 && best.domainHits > 0;
-    const confidence = best.score >= 0.8 ? 'HIGH' : best.score >= 0.5 ? 'MEDIUM' : 'LOW';
+    const found = best.score >= 0.45 && best.domainHits > 0;
+    const confidence = best.score >= 0.85 ? 'HIGH' : best.score >= 0.45 ? 'MEDIUM' : 'LOW';
     const ansText = found ? best.sentence : 'No relevant information found in selected documents.';
     const citation = found ? best.sentence.slice(0, 120) : '';
     return {
