@@ -61,6 +61,23 @@ export default async function handler(req, res) {
     }));
     return res.status(200).json(items);
   }
+  if (req.method === 'DELETE') {
+    const user = await getUser(req);
+    if (!user) return res.status(401).json({ detail: 'Unauthorized' });
+    await ensureBuckets();
+    const supabase = getSupabase({ useServiceRole: true });
+    const id = (req.query?.id || '').toString();
+    if (!id) return res.status(400).json({ detail: 'Invalid id' });
+    const safeId = decodeURIComponent(id).replace(/[\/\\]/g, '_');
+    const paths = [
+      id,
+      `meta/${safeId}.json`,
+      `jobs/${safeId}.status.json`,
+      `jobs/${safeId}.answers.json`,
+    ];
+    await supabase.storage.from('tb-questionnaires').remove(paths);
+    return res.status(200).json({ success: true });
+  }
   if (req.method !== 'POST') return res.status(405).json({ detail: 'Method not allowed' });
 
   const user = await getUser(req);

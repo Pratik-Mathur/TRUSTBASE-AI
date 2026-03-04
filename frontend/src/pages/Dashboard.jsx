@@ -110,7 +110,7 @@ const Dashboard = () => {
     if (!deleteConfirmId) return;
     setDeleting(true);
     try {
-      await axios.delete(`${API}/questionnaires/${deleteConfirmId}`, { headers: getAuthHeaders() });
+      await axios.delete(`${API}/questionnaires`, { headers: getAuthHeaders(), params: { id: deleteConfirmId } });
       setQuestionnaires((prev) => prev.filter((q) => q.id !== deleteConfirmId));
       setDeleteConfirmId(null);
       toast.success('Questionnaire deleted');
