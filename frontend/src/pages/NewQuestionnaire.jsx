@@ -5,8 +5,7 @@ import { toast } from 'sonner';
 import axios from 'axios';
 import { Upload, FileText, ChevronRight, Loader2, CheckSquare, Square, AlertCircle, ArrowLeft } from 'lucide-react';
 
-const API_BASE = (process.env.REACT_APP_BACKEND_URL || '').replace(/\/$/, '');
-const API = `${API_BASE}/api`;
+const API = '/api';
 
 const STEPS = ['Upload Questionnaire', 'Select Documents', 'Process'];
 

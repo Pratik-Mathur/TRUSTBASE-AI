@@ -8,8 +8,7 @@ import {
   Clock, Loader2, AlertCircle, FileUp, ChevronRight, Database, MoreVertical
 } from 'lucide-react';
 
-const API_BASE = (process.env.REACT_APP_BACKEND_URL || '').replace(/\/$/, '');
-const API = `${API_BASE}/api`;
+const API = '/api';
 
 const StatusBadge = ({ status }) => {
   const map = {
