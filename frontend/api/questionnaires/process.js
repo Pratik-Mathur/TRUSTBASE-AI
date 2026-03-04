@@ -45,7 +45,18 @@ export default async function handler(req, res) {
   const admin = getSupabase({ useServiceRole: true });
 
   const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
-  const docIds = Array.isArray(body?.document_ids) ? body.document_ids : [];
+  let docIds = Array.isArray(body?.document_ids) ? body.document_ids : [];
+  if (docIds.length === 0) {
+    // Fallback to last used document ids from status
+    try {
+      const { data: sData } = await admin.storage.from('tb-questionnaires').download(`jobs/${safeId}.status.json`);
+      if (sData) {
+        const sText = await sData.text();
+        const sObj = JSON.parse(sText || '{}');
+        if (Array.isArray(sObj.document_ids)) docIds = sObj.document_ids;
+      }
+    } catch {}
+  }
 
   // Load questionnaire metadata (questions)
   const metaPath = `meta/${safeId}.json`;

@@ -38,6 +38,16 @@ export default async function handler(req, res) {
       const aObj = JSON.parse(aText || '{}');
       answers = aObj.answers || [];
     }
+    // If docx requested, return attachment
+    if ((req.query?.format || '').toString().toLowerCase() === 'docx') {
+      let content = `Questionnaire Report\n\nID: ${id}\nName: ${name}\nStatus: ${status}\n\n`;
+      answers.forEach((a, i) => {
+        content += `Q${i + 1}: ${a.question}\nAnswer: ${a.answer}\nSource: ${a.source_document}\n\n`;
+      });
+      res.setHeader('Content-Type', 'application/octet-stream');
+      res.setHeader('Content-Disposition', `attachment; filename="${name}_report.docx"`);
+      return res.status(200).send(Buffer.from(content, 'utf-8'));
+    }
     return res.status(200).json({
       id,
       name,
