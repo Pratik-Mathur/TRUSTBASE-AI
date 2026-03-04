@@ -38,11 +38,11 @@ async function ensureBuckets() {
 export default async function handler(req, res) {
   if (req.method === 'GET') {
     const user = await getUser(req);
-    if (!user) return res.status(401).json([]);
+    if (!user) return res.status(200).json([]);
     await ensureBuckets();
     const supabase = getSupabase({ useServiceRole: true });
     const { data, error } = await supabase.storage.from('tb-docs').list(user.id, { limit: 200 });
-    if (error) return res.status(500).json([]);
+    if (error) return res.status(200).json([]);
     const items = (data || []).map((f) => ({
       id: `${user.id}/${f.name}`,
       name: f.name,
