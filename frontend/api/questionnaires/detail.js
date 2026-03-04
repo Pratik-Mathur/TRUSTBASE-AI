@@ -21,7 +21,7 @@ export default async function handler(req, res) {
 
   try {
     const admin = getSupabase({ useServiceRole: true });
-    const safeId = id.replace(/[\/\\]/g, '_');
+    const safeId = decodeURIComponent(id).replace(/[\/\\]/g, '_');
     const statusPath = `jobs/${safeId}.status.json`;
     const { data, error } = await admin.storage.from('tb-questionnaires').download(statusPath);
     let status = 'processing';

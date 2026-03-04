@@ -40,7 +40,7 @@ export default async function handler(req, res) {
 
   const id = (req.query?.id || '').toString();
   if (!id) return res.status(400).json({ detail: 'Invalid questionnaire id' });
-  const safeId = id.replace(/[\/\\]/g, '_');
+  const safeId = decodeURIComponent(id).replace(/[\/\\]/g, '_');
 
   await ensureBucket();
   const admin = getSupabase({ useServiceRole: true });
