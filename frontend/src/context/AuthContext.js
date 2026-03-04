@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '../supabase';
+import axios from 'axios';
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
@@ -7,45 +7,30 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!supabase) { setLoading(false); return; }
-    supabase.auth.getSession().then(({ data }) => {
-      const session = data?.session || null;
-      if (session?.user) {
-        setUser({ id: session.user.id, email: session.user.email, name: session.user.user_metadata?.name || '' });
-        localStorage.setItem('trustbaseai_token', session.access_token || '');
-      }
-      setLoading(false);
-    });
+    const token = localStorage.getItem('trustbaseai_token');
+    if (!token) { setLoading(false); return; }
+    axios
+      .get('/api/auth/me', { headers: { Authorization: `Bearer ${token}` } })
+      .then((res) => setUser(res.data))
+      .catch(() => localStorage.removeItem('trustbaseai_token'))
+      .finally(() => setLoading(false));
   }, []);
 
   const login = async (email, password) => {
-    if (!supabase) throw { response: { data: { detail: 'Supabase not configured' } } };
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw { response: { data: { detail: error.message } } };
-    const token = data.session?.access_token || '';
-    localStorage.setItem('trustbaseai_token', token);
-    const u = data.user;
-    const result = { token, user: { id: u.id, email: u.email, name: u.user_metadata?.name || '' } };
-    setUser(result.user);
-    return result;
+    const res = await axios.post('/api/auth/login', { email, password });
+    localStorage.setItem('trustbaseai_token', res.data.token);
+    setUser(res.data.user);
+    return res.data;
   };
 
   const register = async (name, email, password) => {
-    if (!supabase) throw { response: { data: { detail: 'Supabase not configured' } } };
-    const { data, error } = await supabase.auth.signUp({ email, password, options: { data: { name } } });
-    if (error) throw { response: { data: { detail: error.message } } };
-    const token = data.session?.access_token || '';
-    const u = data.user;
-    const result = { token, user: { id: u.id, email: u.email, name } };
-    if (token) {
-      localStorage.setItem('trustbaseai_token', token);
-    }
-    setUser(result.user);
-    return result;
+    const res = await axios.post('/api/auth/register', { name, email, password });
+    if (res.data.token) localStorage.setItem('trustbaseai_token', res.data.token);
+    setUser(res.data.user);
+    return res.data;
   };
 
   const logout = async () => {
-    if (supabase) await supabase.auth.signOut();
     localStorage.removeItem('trustbaseai_token');
     setUser(null);
   };
