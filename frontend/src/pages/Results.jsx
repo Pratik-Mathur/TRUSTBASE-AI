@@ -297,7 +297,7 @@ const Results = () => {
 
   const fetchQuestionnaire = useCallback(async () => {
     try {
-      const res = await axios.get(`${API}/questionnaires/${id}`, { headers: getAuthHeaders() });
+      const res = await axios.get(`/api/questionnaires/detail`, { params: { id }, headers: getAuthHeaders() });
       setQuestionnaire(res.data);
     } catch { toast.error('Failed to load questionnaire'); }
     finally { setLoading(false); }
