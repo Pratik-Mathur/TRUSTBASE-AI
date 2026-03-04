@@ -59,32 +59,53 @@ export default async function handler(req, res) {
     }
   } catch {}
 
-  // Load first reference doc text as evidence (if any)
-  let evidenceText = '';
-  let sourceDocName = '';
-  if (docIds.length > 0) {
-    const firstId = docIds[0];
-    const name = firstId.split('/').pop();
-    sourceDocName = name;
+  const docs = [];
+  for (const did of docIds) {
+    const name = did.split('/').pop();
     try {
-      const { data: doc } = await admin.storage.from('tb-docs').download(firstId);
-      if (doc) {
-        evidenceText = await doc.text();
-        evidenceText = (evidenceText || '').slice(0, 300);
-      }
+      const { data: doc } = await admin.storage.from('tb-docs').download(did);
+      const txt = doc ? await doc.text() : '';
+      const sentences = txt.split(/[\r\n]+|(?<=\.|\?|!)\s+/).map((s) => s.trim()).filter(Boolean);
+      docs.push({ id: did, name, sentences });
     } catch {}
   }
-
-  const answers = questions.map((q) => ({
-    question: q,
-    answer: sourceDocName ? `See ${sourceDocName} for details.` : 'No reference documents selected.',
-    found: !!sourceDocName,
-    confidence: sourceDocName ? 'MEDIUM' : 'LOW',
-    citation: evidenceText ? evidenceText.slice(0, 120) : '',
-    evidence_text: evidenceText || '',
-    source_document: sourceDocName || '',
-    is_edited: false,
-  }));
+  function scoreSentence(q, s) {
+    const ql = q.toLowerCase();
+    const sl = s.toLowerCase();
+    const tokens = ql.replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter((w) => w.length > 2);
+    let sc = 0;
+    for (const t of tokens) { if (sl.includes(t)) sc++; }
+    if (ql.includes('mfa') || ql.includes('multi') && ql.includes('factor')) {
+      if (sl.includes('mfa') || (sl.includes('multi') && sl.includes('factor'))) sc += 2;
+    }
+    if (ql.includes('hipaa')) { if (sl.includes('hipaa')) sc += 2; }
+    if (ql.includes('encryption')) { if (sl.includes('encrypt')) sc += 2; }
+    if (ql.includes('retention')) { if (sl.includes('retention')) sc += 1; }
+    return sc;
+  }
+  const answers = questions.map((q) => {
+    let best = { score: 0, sentence: '', doc: '' };
+    for (const d of docs) {
+      for (const s of d.sentences) {
+        const sc = scoreSentence(q, s);
+        if (sc > best.score) best = { score: sc, sentence: s, doc: d.name };
+      }
+    }
+    const found = best.score >= 2;
+    const confidence = best.score >= 5 ? 'HIGH' : best.score >= 2 ? 'MEDIUM' : 'LOW';
+    const ansText = found ? best.sentence : 'No relevant information found in selected documents.';
+    const citation = found ? best.sentence.slice(0, 120) : '';
+    return {
+      question: q,
+      answer: ansText,
+      found,
+      confidence,
+      citation,
+      evidence_text: best.sentence,
+      source_document: best.doc,
+      is_edited: false,
+    };
+  });
 
   // Persist answers and status
   const statusObj = {
