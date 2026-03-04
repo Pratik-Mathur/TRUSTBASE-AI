@@ -88,7 +88,8 @@ const Dashboard = () => {
 
   const handleDeleteDoc = async (id) => {
     try {
-      await axios.delete(`${API}/documents/${id}`, { headers: getAuthHeaders() });
+      const enc = encodeURIComponent(id);
+      await axios.delete(`${API}/documents/${enc}`, { headers: getAuthHeaders() });
       setDocs((prev) => prev.filter((d) => d.id !== id));
       toast.success('Document deleted');
     } catch { toast.error('Delete failed'); }

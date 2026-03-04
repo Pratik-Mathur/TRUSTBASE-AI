@@ -80,19 +80,40 @@ export default async function handler(req, res) {
       docs.push({ id: did, name, sentences });
     } catch {}
   }
+  const synonyms = {
+    mfa: ['mfa','multi-factor','multi factor','two-factor','2fa'],
+    hipaa: ['hipaa','baa','health insurance portability'],
+    encryption: ['encryption','encrypted','aes','tls','ssl','at rest','in transit'],
+    retention: ['retention','retained','store','stored','storage duration','data retention'],
+    logging: ['logs','logging','audit','auditing'],
+    residency: ['residency','location','region','data center','geo','geography'],
+  };
+  function tokenize(text) {
+    return text.toLowerCase().replace(/[^a-z0-9\s]/g,' ').split(/\s+/).filter(Boolean);
+  }
   function scoreSentence(q, s) {
-    const ql = q.toLowerCase();
-    const sl = s.toLowerCase();
-    const tokens = ql.replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter((w) => w.length > 2);
-    let sc = 0;
-    for (const t of tokens) { if (sl.includes(t)) sc++; }
-    if (ql.includes('mfa') || ql.includes('multi') && ql.includes('factor')) {
-      if (sl.includes('mfa') || (sl.includes('multi') && sl.includes('factor'))) sc += 2;
+    const qTokens = tokenize(q).filter((w)=>w.length>2);
+    const sTokens = tokenize(s);
+    if (sTokens.length===0) return 0;
+    // base overlap
+    let overlap = 0;
+    for (const t of qTokens) if (sTokens.includes(t)) overlap++;
+    let score = overlap;
+    // keyword boosts
+    const qStr = q.toLowerCase();
+    const sStr = s.toLowerCase();
+    for (const [key, list] of Object.entries(synonyms)) {
+      const qHas = list.some(k=>qStr.includes(k));
+      const sHas = list.some(k=>sStr.includes(k));
+      if (qHas && sHas) score += 2;
     }
-    if (ql.includes('hipaa')) { if (sl.includes('hipaa')) sc += 2; }
-    if (ql.includes('encryption')) { if (sl.includes('encrypt')) sc += 2; }
-    if (ql.includes('retention')) { if (sl.includes('retention')) sc += 1; }
-    return sc;
+    // proximity: consecutive matches
+    for (let i=0;i<qTokens.length-1;i++){
+      if (sStr.includes(`${qTokens[i]} ${qTokens[i+1]}`)) score += 1;
+    }
+    // normalize by sentence length
+    const norm = score / Math.sqrt(sTokens.length);
+    return norm;
   }
   const answers = questions.map((q) => {
     let best = { score: 0, sentence: '', doc: '' };
@@ -102,8 +123,8 @@ export default async function handler(req, res) {
         if (sc > best.score) best = { score: sc, sentence: s, doc: d.name };
       }
     }
-    const found = best.score >= 2;
-    const confidence = best.score >= 5 ? 'HIGH' : best.score >= 2 ? 'MEDIUM' : 'LOW';
+    const found = best.score >= 0.35;
+    const confidence = best.score >= 0.8 ? 'HIGH' : best.score >= 0.35 ? 'MEDIUM' : 'LOW';
     const ansText = found ? best.sentence : 'No relevant information found in selected documents.';
     const citation = found ? best.sentence.slice(0, 120) : '';
     return {
