@@ -325,11 +325,11 @@ const Results = () => {
   const handleDownloadDocx = async () => {
     setDownloading(true);
     try {
-      const res = await axios.get(`/api/questionnaires/detail`, { headers: getAuthHeaders(), responseType: 'blob', params: { id, format: 'docx' } });
+      const res = await axios.get(`/api/questionnaires/detail`, { headers: getAuthHeaders(), responseType: 'blob', params: { id, format: 'rtf' } });
       const url = window.URL.createObjectURL(new Blob([res.data]));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `${questionnaire.name}_report.docx`);
+      link.setAttribute('download', `${questionnaire.name}_report.rtf`);
       document.body.appendChild(link);
       link.click();
       link.remove();

@@ -39,14 +39,20 @@ export default async function handler(req, res) {
       answers = aObj.answers || [];
     }
     // If docx requested, return attachment
-    if ((req.query?.format || '').toString().toLowerCase() === 'docx') {
-      let content = `Questionnaire Report\n\nID: ${id}\nName: ${name}\nStatus: ${status}\n\n`;
+    if ((req.query?.format || '').toString().toLowerCase() === 'rtf') {
+      let rtf = `{\\rtf1\\ansi\\deff0\n`;
+      rtf += `\\b Questionnaire Report \\b0\\par\n`;
+      rtf += `ID: ${id}\\par\nName: ${name}\\par\nStatus: ${status}\\par\\par\n`;
       answers.forEach((a, i) => {
-        content += `Q${i + 1}: ${a.question}\nAnswer: ${a.answer}\nSource: ${a.source_document}\n\n`;
+        rtf += `\\b Q${i + 1}: \\b0 ${a.question}\\par\n`;
+        rtf += `Answer: ${a.answer}\\par\n`;
+        if (a.source_document) rtf += `Source: ${a.source_document}\\par\n`;
+        rtf += `\\par\n`;
       });
-      res.setHeader('Content-Type', 'application/octet-stream');
-      res.setHeader('Content-Disposition', `attachment; filename="${name}_report.docx"`);
-      return res.status(200).send(Buffer.from(content, 'utf-8'));
+      rtf += `}\n`;
+      res.setHeader('Content-Type', 'application/rtf');
+      res.setHeader('Content-Disposition', `attachment; filename="${name}_report.rtf"`);
+      return res.status(200).send(Buffer.from(rtf, 'utf-8'));
     }
     return res.status(200).json({
       id,

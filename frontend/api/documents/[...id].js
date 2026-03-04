@@ -20,8 +20,9 @@ export default async function handler(req, res) {
   const supabase = getSupabase();
   const { data: userData } = await supabase.auth.getUser(token);
   if (!userData?.user) return res.status(401).json({ detail: 'Unauthorized' });
-  const id = Array.isArray(req.query.id) ? req.query.id.join('/') : req.query.id;
+  const segs = Array.isArray(req.query.id) ? req.query.id : [req.query.id];
+  const id = segs.map((s) => decodeURIComponent(s)).join('/');
   const { error } = await supabase.storage.from('tb-docs').remove([id]);
-  if (error) return res.status(500).json({ detail: 'Delete failed' });
+  if (error) return res.status(200).json({ success: false });
   return res.status(200).json({ success: true });
 }
