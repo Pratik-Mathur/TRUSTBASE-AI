@@ -261,12 +261,14 @@ const AnswerCard = ({ answer: initialAnswer, idx, qId, headers, onUpdate, canEdi
         </div>
       )}
 
-      <EvidencePanel
-        evidenceText={answer.evidence_text}
-        sourceDocument={answer.source_document}
-        open={evidenceOpen}
-        onToggle={() => setEvidenceOpen((o) => !o)}
-      />
+      {answer.found && (
+        <EvidencePanel
+          evidenceText={answer.evidence_text}
+          sourceDocument={answer.source_document}
+          open={evidenceOpen}
+          onToggle={() => setEvidenceOpen((o) => !o)}
+        />
+      )}
     </div>
   );
 };

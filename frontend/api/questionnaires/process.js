@@ -102,10 +102,11 @@ export default async function handler(req, res) {
     // keyword boosts
     const qStr = q.toLowerCase();
     const sStr = s.toLowerCase();
+    let domainHits = 0;
     for (const [key, list] of Object.entries(synonyms)) {
       const qHas = list.some(k=>qStr.includes(k));
       const sHas = list.some(k=>sStr.includes(k));
-      if (qHas && sHas) score += 2;
+      if (qHas && sHas) { score += 2; domainHits++; }
     }
     // proximity: consecutive matches
     for (let i=0;i<qTokens.length-1;i++){
@@ -113,18 +114,18 @@ export default async function handler(req, res) {
     }
     // normalize by sentence length
     const norm = score / Math.sqrt(sTokens.length);
-    return norm;
+    return { norm, domainHits };
   }
   const answers = questions.map((q) => {
-    let best = { score: 0, sentence: '', doc: '' };
+    let best = { score: 0, domainHits: 0, sentence: '', doc: '' };
     for (const d of docs) {
       for (const s of d.sentences) {
-        const sc = scoreSentence(q, s);
-        if (sc > best.score) best = { score: sc, sentence: s, doc: d.name };
+        const { norm, domainHits } = scoreSentence(q, s);
+        if (norm > best.score) best = { score: norm, domainHits, sentence: s, doc: d.name };
       }
     }
-    const found = best.score >= 0.35;
-    const confidence = best.score >= 0.8 ? 'HIGH' : best.score >= 0.35 ? 'MEDIUM' : 'LOW';
+    const found = best.score >= 0.35 && best.domainHits > 0;
+    const confidence = best.score >= 0.8 ? 'HIGH' : best.score >= 0.5 ? 'MEDIUM' : 'LOW';
     const ansText = found ? best.sentence : 'No relevant information found in selected documents.';
     const citation = found ? best.sentence.slice(0, 120) : '';
     return {
