@@ -3,6 +3,10 @@
   "outputDirectory": "build",
   "rewrites": [
     {
+      "source": "/api/questionnaires/(.*)/process",
+      "destination": "/api/questionnaires/process?id=$1"
+    },
+    {
       "source": "/((?!api).*)",
       "destination": "/index.html"
     }
