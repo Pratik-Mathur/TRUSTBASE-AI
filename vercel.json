@@ -3,6 +3,10 @@
   "outputDirectory": "frontend/build",
   "rewrites": [
     {
+      "source": "/api/(.*)",
+      "destination": "https://doc-to-response.preview.emergentagent.com/api/$1"
+    },
+    {
       "source": "/((?!api).*)",
       "destination": "/index.html"
     }
