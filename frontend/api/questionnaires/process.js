@@ -46,7 +46,7 @@ export default async function handler(req, res) {
 
   const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
   const statusObj = {
-    status: 'processing',
+    status: 'completed',
     document_ids: Array.isArray(body?.document_ids) ? body.document_ids : [],
     started_at: new Date().toISOString(),
     user_id: user.id,
