@@ -4,12 +4,13 @@ import { readFile as fsReadFile } from 'fs/promises';
 
 export const config = { api: { bodyParser: false } };
 
-function getSupabase() {
+function getSupabase({ useServiceRole = false } = {}) {
   const url =
     process.env.SUPABASE_URL ||
     process.env.NEXT_PUBLIC_SUPABASE_URL ||
     process.env.REACT_APP_SUPABASE_URL;
   const key =
+    (useServiceRole && process.env.SUPABASE_SERVICE_ROLE_KEY) ||
     process.env.SUPABASE_ANON_KEY ||
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
     process.env.REACT_APP_SUPABASE_ANON_KEY;
@@ -23,6 +24,14 @@ async function getUser(req) {
   const supabase = getSupabase();
   const { data } = await supabase.auth.getUser(token);
   return data?.user || null;
+}
+
+async function ensureBuckets() {
+  const admin = getSupabase({ useServiceRole: true });
+  const { data: bq } = await admin.storage.getBucket('tb-questionnaires');
+  if (!bq) {
+    await admin.storage.createBucket('tb-questionnaires', { public: false, fileSizeLimit: '10MB' });
+  }
 }
 
 function extractQuestionsText(text) {
@@ -39,7 +48,8 @@ export default async function handler(req, res) {
   if (req.method === 'GET') {
     const user = await getUser(req);
     if (!user) return res.status(401).json([]);
-    const supabase = getSupabase();
+    await ensureBuckets();
+    const supabase = getSupabase({ useServiceRole: true });
     const { data, error } = await supabase.storage.from('tb-questionnaires').list(user.id, { limit: 200 });
     if (error) return res.status(500).json([]);
     const items = (data || []).map((f) => ({
@@ -56,13 +66,15 @@ export default async function handler(req, res) {
   const user = await getUser(req);
   if (!user) return res.status(401).json({ detail: 'Unauthorized' });
 
+  await ensureBuckets();
   const form = formidable();
   form.parse(req, async (err, fields, files) => {
     if (err) return res.status(400).json({ detail: 'Invalid form data' });
-    const file = files.file;
-    if (!file || Array.isArray(file)) return res.status(400).json({ detail: 'File missing' });
+    const fileField = files.file || (Array.isArray(files.files) ? files.files[0] : files.files);
+    const file = Array.isArray(fileField) ? fileField[0] : fileField;
+    if (!file) return res.status(400).json({ detail: 'File missing' });
 
-    const supabase = getSupabase();
+    const supabase = getSupabase({ useServiceRole: true });
     const path = `${user.id}/${file.originalFilename}`;
     const data = await fsReadFile(file.filepath);
     const { error } = await supabase.storage.from('tb-questionnaires').upload(path, data, { upsert: true });

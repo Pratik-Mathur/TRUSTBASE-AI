@@ -30,7 +30,7 @@ const NewQuestionnaire = () => {
     fd.append('file', file);
     try {
       const res = await axios.post(`${API}/questionnaires`, fd, {
-        headers: { ...getAuthHeaders(), 'Content-Type': 'multipart/form-data' },
+        headers: { ...getAuthHeaders() },
       });
       setQuestionnaire(res.data);
 

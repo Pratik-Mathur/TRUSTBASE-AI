@@ -75,7 +75,7 @@ const Dashboard = () => {
     const fd = new FormData();
     fd.append('file', file);
     try {
-      await axios.post(`${API}/documents`, fd, { headers: { ...getAuthHeaders(), 'Content-Type': 'multipart/form-data' } });
+      await axios.post(`${API}/documents`, fd, { headers: { ...getAuthHeaders() } });
       toast.success('Document uploaded successfully');
       fetchDocs();
     } catch (err) {
