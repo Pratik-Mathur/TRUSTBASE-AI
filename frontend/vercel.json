@@ -7,6 +7,10 @@
       "destination": "/api/questionnaires/process?id=$1"
     },
     {
+      "source": "/api/questionnaires/(.+)$",
+      "destination": "/api/questionnaires/detail?id=$1"
+    },
+    {
       "source": "/((?!api).*)",
       "destination": "/index.html"
     }
