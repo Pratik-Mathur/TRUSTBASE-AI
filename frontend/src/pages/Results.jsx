@@ -207,7 +207,7 @@ const AnswerCard = ({ answer: initialAnswer, idx, qId, headers, onUpdate, canEdi
           <span className={`text-xs font-semibold uppercase tracking-wider ${answer.found ? 'text-green-400' : 'text-amber-400'}`}>
             {answer.found ? 'Answer' : 'Not Found'}
           </span>
-          <ConfidenceBadge confidence={answer.confidence} />
+          {answer.found && <ConfidenceBadge confidence={answer.confidence} />}
           {answer.is_edited && (
             <span className="inline-flex items-center gap-1 text-[10px] text-slate-500 border border-slate-700 rounded-full px-2 py-0.5">
               <PenLine className="h-2.5 w-2.5" /> Edited

@@ -146,9 +146,10 @@ export default async function handler(req, res) {
       }
     }
     const found = best.score >= 0.45 && best.domainHits > 0;
-    const confidence = best.score >= 0.85 ? 'HIGH' : best.score >= 0.45 ? 'MEDIUM' : 'LOW';
+    let confidence = best.score >= 0.85 ? 'HIGH' : best.score >= 0.45 ? 'MEDIUM' : 'LOW';
     const ansText = found ? best.sentence : 'No relevant information found in selected documents.';
     const citation = found ? best.sentence.slice(0, 120) : '';
+    if (!found) confidence = 'LOW';
     return {
       question: q,
       answer: ansText,
