@@ -70,7 +70,7 @@ const NewQuestionnaire = () => {
         { headers: getAuthHeaders() }
       );
       toast.success('Processing started!');
-      navigate(`/questionnaire/${questionnaire.id}`);
+      navigate(`/questionnaire/${encodeURIComponent(questionnaire.id)}`);
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Failed to start processing');
       setProcessing(false);

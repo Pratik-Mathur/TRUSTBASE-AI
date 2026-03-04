@@ -257,7 +257,7 @@ const Dashboard = () => {
                   key={q.id}
                   data-testid={`questionnaire-item-${q.id}`}
                   className="flex items-center justify-between bg-[#0B1221] border border-slate-800 rounded-xl px-5 py-4 hover:border-slate-700 transition-colors cursor-pointer"
-                  onClick={() => navigate(`/questionnaire/${q.id}`)}
+                  onClick={() => navigate(`/questionnaire/${encodeURIComponent(q.id)}`)}
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="bg-violet-500/10 rounded-lg p-2">
